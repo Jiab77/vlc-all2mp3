@@ -1,23 +1,35 @@
 @echo off
-REM Made by Jon for Himself - 2014
-REM Last Modification: 17.02.2016 - 14:58
-REM Last Changes:
-REM - Updated counter code
-REM - Changed params delimiter in for loops
-REM - Removed quotes on dragDrop variable
-REM - Fixed output directory
-REM - Added metadata 'album'
-REM - Renamed 'extFile' var to 'extension'
+:: vlc-all2mp3 - A small script convert any video or audio file to MP3 using VLC and Lame
+:: Copyright (C) 2014 - 2016  Jiab77 <jonathan.barda@gmail.com>
 
-REM Header
+:: This program is free software: you can redistribute it and/or modify
+:: it under the terms of the GNU General Public License as published by
+:: the Free Software Foundation, either version 3 of the License, or
+:: (at your option) any later version.
+
+:: This program is distributed in the hope that it will be useful,
+:: but WITHOUT ANY WARRANTY; without even the implied warranty of
+:: MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+:: GNU General Public License for more details.
+
+:: Last Modification: 17.02.2016 - 14:58
+:: Last Changes:
+:: - Updated counter code
+:: - Changed params delimiter in for loops
+:: - Removed quotes on dragDrop variable
+:: - Fixed output directory
+:: - Added metadata 'album'
+:: - Renamed 'extFile' var to 'extension'
+
+:: Header
 for %%a in (cls echo) do %%a.
 setlocal EnableDelayedExpansion
 title %~nx0 - VLC / Lame Transcode Script
 
-REM Config
+:: Config
 set dragDrop=%*
 set retryCount=0
-REM Change Here
+:: Change Here
 set extension=*.*
 set replayGainEnabled=true
 set pathVLC=C:\Program Files\VideoLAN\VLC
@@ -25,19 +37,26 @@ set pathLAME=D:\Documents\Jon\Downloads\lame3.99.5-64
 set "sourceFolder=%~dp1" & set sourceFolder=!sourceFolder:~0,-1!
 set outFolder=!sourceFolder!\transcoded-tag
 set logFolder=%outFolder%\log
-REM End Change
+:: End Change
 
-REM Action
+:: Terminal output
+echo %~n0  Copyright (C) 2014 - 2016  Jiab77 <jonathan.barda@gmail.com>
+echo This program comes with ABSOLUTELY NO WARRANTY;
+echo This is free software, and you are welcome to redistribute it
+echo under certain conditions;
+echo.
+
+:: Action
 call :countItems
 goto quit
 
 :countItems
-REM Counter Settings
+:: Counter Settings
 set id=0
 set count=0
 set countTotal=0
 
-REM Temporary list creation
+:: Temporary list creation
 set "tempList=%temp%\tempList_%random%.txt"
 if exist "!tempList!" type NUL>!tempList!
 if not defined dragDrop (
@@ -71,7 +90,7 @@ if not defined dragDrop (
 	)
 )
 
-REM List file created, processing
+:: List file created, processing
 if exist "!tempList!" (
 	echo. & pause
 	call :process
@@ -120,14 +139,14 @@ set fileName=%~n3
 set fileFullName=%~nx3
 set destFolder=%~4
 set sleepTime=2
-REM PATCHING PING 1s LATENCY
+:: PATCHING PING 1s LATENCY
 set /a sleepTime=!sleepTime!+1
 
-REM FIX VLC BUG WITH ',' IN OUT FILENAME
+:: FIX VLC BUG WITH ',' IN OUT FILENAME
 set fixedFileName=!fileName:, = + !
 set fixedFileFullName=!fileFullName:, = + !
 
-REM STARTING PROCESS
+:: STARTING PROCESS
 (call :_processVLC !id! !countTotal! "!filePath!\!fileFullName!" "%outFolder%\wav") && (
 	REM if exist "!destFolder!\!fileName!.wav" (
 	if exist "!destFolder!\!fixedFileName!.wav" (
@@ -175,20 +194,20 @@ set fileName=%~n3
 set fileFullName=%~nx3
 set destFolder=%~4
 
-REM STATUS
+:: STATUS
 set "processTitle=Processing file [!fileId!/!fileTotal!] ^| [!fileFullName!] To WAV..." & title !processTitle!
 echo. & echo !processTitle! & echo.
 
-REM CREATING LOG DIR IF NOT EXIST ALREADY
+:: CREATING LOG DIR IF NOT EXIST ALREADY
 if not exist "%logFolder%" mkdir "%logFolder%"
 
-REM CREATING DESTINATION DIR IF NOT EXIST ALREADY
+:: CREATING DESTINATION DIR IF NOT EXIST ALREADY
 if not exist "!destFolder!" mkdir "!destFolder!"
 
-REM FIX VLC BUG WITH ',' IN OUT FILENAME
+:: FIX VLC BUG WITH ',' IN OUT FILENAME
 set fileName=!fileName:, = + !
 
-REM LOADING PROCESS
+:: LOADING PROCESS
 call "%pathVLC%\vlc.exe" -I dummy --verbose=2 --file-logging --logfile="%logFolder%\vlc-log_!fileName!.txt" "!filePath!\!fileFullName!" --no-sout-video --sout=#transcode{acodec=s16l,channels=2,samplerate=48000}:standard{access=file,mux=wav,dst="!destFolder!\!fileName!.wav"} vlc://quit
 endlocal
 goto :EOF
@@ -207,7 +226,7 @@ set fileExtension=%~x3
 set fileFullName=%~nx3
 set destFolder=%~4
 
-REM STATUS
+:: STATUS
 if /i "%replayGainEnabled%"=="true" (
 	set "processTitle=Processing file [!fileId!/!fileTotal!] ^| [!fileName!.wav] To MP3 [RG]..." & title !processTitle!
 ) else (
@@ -215,10 +234,10 @@ if /i "%replayGainEnabled%"=="true" (
 )
 echo. & echo !processTitle! & echo.
 
-REM CREATING DESTINATION DIR IF NOT EXIST ALREADY
+:: CREATING DESTINATION DIR IF NOT EXIST ALREADY
 if not exist "!destFolder!" mkdir "!destFolder!"
 
-REM MP3-ID-TAG STEP
+:: MP3-ID-TAG STEP
 set "fileFullNameClean=%~nx3" & set fileFullNameClean=!fileFullNameClean: - =-!
 for /f "usebackq tokens=1-3 delims=-" %%t in ('!fileFullNameClean!') do (
 	set trackTitle=%%u
@@ -226,11 +245,11 @@ for /f "usebackq tokens=1-3 delims=-" %%t in ('!fileFullNameClean!') do (
 	set trackAlbum=%%v
 )
 
-REM Assign default tag
+:: Assign default tag
 if "!trackArtist!"=="" set trackArtist=Unknown Artist
 if "!trackTitle!"=="" set trackTitle=!fileName!
 
-REM Using 'call' to handle the var %fileExtension% in the replace string
+:: Using 'call' to handle the var %fileExtension% in the replace string
 call set trackTitle=%%trackTitle:%fileExtension%=%%
 if not "!trackAlbum!"=="" call set trackAlbum=%%trackAlbum:%fileExtension%=%%
 if not "!trackAlbum!"=="" (
@@ -240,9 +259,9 @@ if not "!trackAlbum!"=="" (
 )
 
 REM echo. & echo [!trackArtist! - !trackTitle! - !trackAlbum! - !trackMetas!] & pause
-REM END MP3-ID-TAG STEP
+:: END MP3-ID-TAG STEP
 
-REM LOADING PROCESS
+:: LOADING PROCESS
 if /i "%replayGainEnabled%"=="true" (
 	call "%pathLAME%\lame.exe" -m j -V 0 -q 0 --lowpass 24 --vbr-new -b 32 --replaygain-accurate !trackMetas! "!filePath!\!fileFullName!" "!destFolder!\!fileName!.mp3"
 ) else (
@@ -252,7 +271,7 @@ endlocal
 goto :EOF
 
 :quit
-REM DON'T ERASE TEMP FILE ON ERROR
+:: DON'T ERASE TEMP FILE ON ERROR
 if !ERRORLEVEL! EQU 0 (
 	if exist "!tempList!" del /f/q "!tempList!" > NUL
 )
