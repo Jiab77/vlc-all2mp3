@@ -32,8 +32,8 @@ set retryCount=0
 :: Change Here
 set extension=*.*
 set replayGainEnabled=true
-set pathVLC=C:\Program Files\VideoLAN\VLC
-set pathLAME=D:\Documents\Jon\Downloads\lame3.99.5-64
+set pathVLC=/path/to/vlc
+set pathLAME=/path/to/lame
 set "sourceFolder=%~dp1" & set sourceFolder=!sourceFolder:~0,-1!
 set outFolder=!sourceFolder!\transcoded-tag
 set logFolder=%outFolder%\log
